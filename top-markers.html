@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Methylation Marker Data Analyzer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-search"></i> Methylation Analyzer
+      </a>
+    </div>
+  </nav>
+
+  <div class="container py-5">
+    <!-- Introduction -->
+    <div class="mb-5">
+      <h2>Welcome to the DNA Methylation Marker Analyzer</h2>
+      <p>This tool allows you to analyze raw DNA methylation marker data files. You can:</p>
+      <ul>
+        <li>Upload your own methylation result file (tab-delimited format)</li>
+        <li>Preview top 100 markers at a time with easy "load more" navigation</li>
+        <li>Click any marker to look it up in the <a href="https://ngdc.cncb.ac.cn/ewas/datahub/probe/cg06994282" target="_blank">EWAS DataHub</a></li>
+        <li>Run a demo with a sample file already included</li>
+      </ul>
+      <p><strong>What are methylation markers?</strong> They are specific CpG sites in your DNA where methylation levels can be measured and studied for health, aging, and disease associations.</p>
+    </div>
+
+    <!-- File Controls -->
+    <div class="mb-3">
+      <input class="form-control" type="file" id="fileInput">
+    </div>
+
+    <div class="mb-4">
+      <button class="btn btn-primary me-2" onclick="processFile()">Analyze File</button>
+      <button class="btn btn-secondary me-2" onclick="loadSampleFile()">Run Sample File</button>
+      <button class="btn btn-info" onclick="viewTop5()">View Top 5 Most Studied Markers</button>
+    </div>
+
+    <!-- Results Table -->
+    <table class="table table-striped table-bordered" id="resultTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Marker Name</th>
+          <th>Value</th>
+          <th>EWAS Link</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- Load More Button -->
+    <div class="text-center mt-3">
+      <button id="loadMoreBtn" class="btn btn-outline-primary" onclick="loadMore()" style="display: none;">Load Next 100</button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="top5Modal" tabindex="-1" aria-labelledby="top5ModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="top5ModalLabel">Top 5 Most Studied Markers</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="top5Content">
+          <!-- Results will be injected here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let allLines = [];
+    let currentIndex = 0;
+    let fileLoaded = false;
+    const chunkSize = 100;
+
+    const markerMeta = {
+      "cg00000029": {
+        gene: "N/A",
+        description: "Frequently used as a control probe in methylation studies.",
+        conditions: "Quality control in methylation arrays."
+      },
+      "cg00000165": {
+        gene: "PTPN6",
+        description: "Associated with DNA methylation in various cancers.",
+        conditions: "Cancer research."
+      },
+      "cg00000221": {
+        gene: "N/A",
+        description: "Commonly referenced in methylation profiling.",
+        conditions: "General methylation studies."
+      },
+      "cg00000292": {
+        gene: "N/A",
+        description: "Utilized in various epigenetic analyses.",
+        conditions: "Epigenetic research."
+      },
+      "cg00000622": {
+        gene: "N/A",
+        description: "Included in multiple methylation arrays for quality assessment.",
+        conditions: "Quality assessment in arrays."
+      }
+    };
+
+    function processFile() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files[0]) {
+        alert('Please select a file first.');
+        return;
+      }
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        allLines = e.target.result.split(/\r?\n/).filter(line => line.trim() !== '');
+        currentIndex = 1;
+        fileLoaded = true;
+        document.querySelector('#resultTable tbody').innerHTML = '';
+        loadNextChunk();
+      };
+
+      reader.readAsText(file);
+    }
+
+    function loadSampleFile() {
+      fetch('raw_full_methylation_James.txt')
+        .then(response => {
+          if (!response.ok) throw new Error('Sample file not found');
+          return response.text();
+        })
+        .then(data => {
+          allLines = data.split(/\r?\n/).filter(line => line.trim() !== '');
+          currentIndex = 1;
+          fileLoaded = true;
+          document.querySelector('#resultTable tbody').innerHTML = '';
+          loadNextChunk();
+        })
+        .catch(error => {
+          alert('Error loading sample file: ' + error.message);
+        });
+    }
+
+    function loadNextChunk() {
+      const tableBody = document.querySelector('#resultTable tbody');
+      const end = Math.min(currentIndex + chunkSize, allLines.length);
+
+      for (let i = currentIndex; i < end; i++) {
+        const parts = allLines[i].split(/\t/);
+        if (parts.length >= 2) {
+          const marker = parts[0];
+          const value = parts[1];
+          const ewasLink = `https://ngdc.cncb.ac.cn/ewas/datahub/probe/${marker}`;
+          const row = `<tr>
+            <td>${marker}</td>
+            <td>${value}</td>
+            <td><a href="${ewasLink}" target="_blank">View on EWAS</a></td>
+          </tr>`;
+          tableBody.innerHTML += row;
+        }
+      }
+
+      currentIndex = end;
+      document.getElementById('loadMoreBtn').style.display = currentIndex < allLines.length ? 'block' : 'none';
+    }
+
+    function viewTop5() {
+      if (!fileLoaded) {
+        const content = `<div class="alert alert-warning">Please upload a file or run the sample file first.</div>`;
+        document.getElementById('top5Content').innerHTML = content;
+        new bootstrap.Modal(document.getElementById('top5Modal')).show();
+        return;
+      }
+
+      const map = {};
+      for (let i = 1; i < allLines.length; i++) {
+        const [marker, value] = allLines[i].split(/\t/);
+        if (marker) map[marker] = value;
+      }
+
+      let content = `
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Marker ID</th>
+              <th>Value</th>
+              <th>Gene</th>
+              <th>Description</th>
+              <th>Conditions</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      for (const marker of Object.keys(markerMeta)) {
+        const meta = markerMeta[marker];
+        const value = map[marker] ?? "<span class='text-danger'>Not present in raw data file</span>";
+        const link = `https://ngdc.cncb.ac.cn/ewas/datahub/probe/${marker}`;
+        content += `<tr>
+          <td>${marker}</td>
+          <td>${value}</td>
+          <td>${meta.gene}</td>
+          <td>${meta.description}</td>
+          <td>${meta.conditions}</td>
+          <td><a href="${link}" target="_blank">EWAS Link</a></td>
+        </tr>`;
+      }
+
+      content += `</tbody></table>`;
+      document.getElementById('top5Content').innerHTML = content;
+      new bootstrap.Modal(document.getElementById('top5Modal')).show();
+    }
+  </script>
+</body>
+</html>
