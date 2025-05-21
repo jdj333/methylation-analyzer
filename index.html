@@ -5,11 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Methylation Marker Data Analyzer</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
-  <div class="container py-5">
-    <h2 class="mb-4">DNA Methylation Marker Analyzer</h2>
+  <!-- Header / Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-search"></i> Methylation Analyzer
+      </a>
+    </div>
+  </nav>
 
+  <div class="container py-5">
+    <!-- Intro Section -->
+    <div class="mb-5">
+      <h2>Welcome to the DNA Methylation Marker Analyzer</h2>
+      <p>This tool allows you to analyze raw DNA methylation marker data files. You can:</p>
+      <ul>
+        <li>Upload your own methylation result file (tab-delimited format)</li>
+        <li>Preview top 100 markers at a time with easy "load more" navigation</li>
+        <li>Click any marker to look it up in the <a href="https://ngdc.cncb.ac.cn/ewas/datahub/probe/cg06994282" target="_blank">EWAS DataHub</a></li>
+        <li>Run a demo with a sample file already included</li>
+      </ul>
+      <p><strong>What are methylation markers?</strong> They are specific CpG sites in your DNA where methylation levels can be measured and studied for health, aging, and disease associations.</p>
+    </div>
+
+    <!-- File Controls -->
     <div class="mb-3">
       <input class="form-control" type="file" id="fileInput">
     </div>
@@ -19,22 +41,25 @@
       <button class="btn btn-secondary" onclick="loadSampleFile()">Run Sample File</button>
     </div>
 
+    <!-- Results Table -->
     <table class="table table-striped table-bordered" id="resultTable">
       <thead class="table-dark">
         <tr>
           <th>Marker Name</th>
           <th>Value</th>
-          <th>PubMed Link</th>
+          <th>EWAS Link</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
+    <!-- Load More -->
     <div class="text-center mt-3">
       <button id="loadMoreBtn" class="btn btn-outline-primary" onclick="loadMore()" style="display: none;">Load Next 100</button>
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let allLines = [];
@@ -69,11 +94,11 @@
         if (parts.length >= 2) {
           const marker = parts[0];
           const value = parts[1];
-          const pubMedLink = `https://pubmed.ncbi.nlm.nih.gov/?term=${marker}`;
+          const ewasLink = `https://ngdc.cncb.ac.cn/ewas/datahub/probe/${marker}`;
           const row = `<tr>
             <td>${marker}</td>
             <td>${value}</td>
-            <td><a href="${pubMedLink}" target="_blank">Search PubMed</a></td>
+            <td><a href="${ewasLink}" target="_blank">View on EWAS</a></td>
           </tr>`;
           tableBody.innerHTML += row;
         }
