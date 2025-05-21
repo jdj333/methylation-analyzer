@@ -1,1 +1,69 @@
-<h1>test</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Methylation Marker Data Analyzer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container py-5">
+    <h2 class="mb-4">DNA Methylation Marker Analyzer</h2>
+    <div class="mb-3">
+      <input class="form-control" type="file" id="fileInput">
+    </div>
+    <button class="btn btn-primary" onclick="processFile()">Analyze File</button>
+    <table class="table table-striped table-bordered mt-4" id="resultTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Marker Name</th>
+          <th>Value</th>
+          <th>PubMed Link</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function processFile() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files[0]) {
+        alert('Please select a file first.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const lines = e.target.result.split(/\r?\n/);
+        const tableBody = document.querySelector('#resultTable tbody');
+        tableBody.innerHTML = '';
+
+        // Skip header line and process each subsequent line
+        for (let i = 1; i < lines.length; i++) {
+          if(lines[i].trim() === "") continue;
+          const parts = lines[i].split(/\t/);
+          if (parts.length >= 2) {
+            const marker = parts[0];
+            const value = parts[1];
+            const pubMedLink = `https://pubmed.ncbi.nlm.nih.gov/?term=${marker}`;
+
+            const row = `<tr>
+              <td>${marker}</td>
+              <td>${value}</td>
+              <td><a href="${pubMedLink}" target="_blank">Search PubMed</a></td>
+            </tr>`;
+
+            tableBody.innerHTML += row;
+          }
+        }
+      };
+
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
