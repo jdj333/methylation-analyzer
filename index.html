@@ -35,29 +35,16 @@
       border-color: #555;
     }
 
-    /* 🎯 Fix for data tables */
-    .dark-mode .table {
-      background-color: #1f1f1f;
-      color: #e0e0e0;
-    }
-
-    .dark-mode .table-striped tbody tr:nth-of-type(odd) {
-      background-color: #2a2a2a;
-    }
-
-    .dark-mode .table-striped tbody tr:nth-of-type(even) {
-      background-color: #1f1f1f;
-    }
-
-    .dark-mode .table-bordered th,
-    .dark-mode .table-bordered td {
-      border-color: #555 !important;
-    }
-
-    .dark-mode .table thead,
-    .dark-mode .table-dark thead {
-      background-color: #2c2c2c;
-      color: #ffffff;
+    /* ✅ FIXED TABLE STYLING */
+    .dark-mode table {
+      --bs-table-bg: #1f1f1f;
+      --bs-table-color: #e0e0e0;
+      --bs-table-striped-bg: #2a2a2a;
+      --bs-table-striped-color: #e0e0e0;
+      --bs-table-hover-bg: #2d2d2d;
+      --bs-table-hover-color: #ffffff;
+      --bs-table-border-color: #444;
+      border-color: var(--bs-table-border-color);
     }
 
     .dark-mode a {
